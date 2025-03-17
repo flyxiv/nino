@@ -129,7 +129,7 @@ def merge_sprite_labels_to_one(label_file_path):
             for line in lines:
                 label, *rest = line.split()
 
-                if int(label) > 1:
+                if int(label) >= 1:
                     f.write('1 ') 
                 else:
                     f.write('0 ') 
