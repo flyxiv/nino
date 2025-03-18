@@ -23,7 +23,7 @@ def masked_loss(pred, target, mask):
     return masked_loss.sum() / (mask.sum() + EPSILON)
     
 
-def train_autoencoder_model(model, data_loader, /, *, optimizer, loss_fn, num_epochs=2000):
+def train_autoencoder_model(model, data_loader, /, *, optimizer, loss_fn, num_epochs=500):
 	for epoch in range(num_epochs):
 		running_loss = 0.0
 
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         model = CNNAutoEncoder(1)
         model.to(device)
         data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
-        optimizer = Adam(model.parameters(), lr=0.0004) 
+        optimizer = Adam(model.parameters(), lr=0.0002) 
         loss_fn = L1Loss() 
 
         train_autoencoder_model(model, data_loader, optimizer=optimizer, loss_fn=loss_fn)
