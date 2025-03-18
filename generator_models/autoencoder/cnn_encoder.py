@@ -24,16 +24,18 @@ class CNNAutoEncoder(nn.Module):
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2),
             nn.LeakyReLU(0.1),
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding='valid'),
             nn.LeakyReLU(0.1),
-
         )
 
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=3, stride=2),
             nn.LeakyReLU(0.1),
-            nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=1),
+            nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=3),
             nn.LeakyReLU(0.1),
-            nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=2),
+            nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=3),
+            nn.LeakyReLU(0.1),
+            nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=2),
         )
     
     def forward(self, x):

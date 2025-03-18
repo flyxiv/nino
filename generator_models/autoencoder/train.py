@@ -6,7 +6,6 @@ import logging
 import argparse
 
 from tqdm import tqdm
-from .basic import BasicAutoEncoder
 from .cnn_encoder import CNNAutoEncoder
 from ..util.img_dataloader import ImgDataset
 from torch.optim import Adam
@@ -24,7 +23,7 @@ def masked_loss(pred, target, mask):
     return masked_loss.sum() / (mask.sum() + EPSILON)
     
 
-def train_autoencoder_model(model, data_loader, /, *, optimizer, loss_fn, num_epochs=200):
+def train_autoencoder_model(model, data_loader, /, *, optimizer, loss_fn, num_epochs=2000):
 	for epoch in range(num_epochs):
 		running_loss = 0.0
 
@@ -65,19 +64,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    if args.model == 'basic':
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        dataset = ImgDataset(args.input_dir, args.label_dir, device)
-        model = BasicAutoEncoder(1)
-        model.to(device)
-        data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
-        optimizer = Adam(model.parameters(), lr=0.001) 
-        loss_fn = L1Loss() 
-
-        train_autoencoder_model(model, data_loader, optimizer=optimizer, loss_fn=loss_fn)
-        model_scripted = script(model)
-        model_scripted.save('autoencoder.pt')
-
     if args.model == 'cnn':
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         dataset = ImgDataset(args.input_dir, args.label_dir, device, output_img_size=(79, 79))
