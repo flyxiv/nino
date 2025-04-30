@@ -163,7 +163,6 @@ def get_coco_dataloaders(root_dir, batch_size=4, num_workers=0, shuffle=True, im
         num_workers=num_workers,
         collate_fn=collate_fn_images
     )
-    print(train_dataloader.__dict__)
 
     valid_dataset = COCOSegmentationDataset(
         root_dir=root_dir,

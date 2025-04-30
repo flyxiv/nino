@@ -1,8 +1,8 @@
-"""Script for training RTMDET model
+"""Script for training RTMDET model for object detection
 
 run ex) in nino base directory,
 ```sh
-python -m model.segmentation.train --dataset-dir ./data/instance_segmentation_coco --batch-size 16 --epochs 10 --lr 0.0001 --device cuda --img-size 1024 --save-dir ./ --model-name rtmdet_model
+python -m model.segmentation.train.train_object_detection --dataset-dir ./data/instance_segmentation_coco --batch-size 16 --epochs 10 --lr 0.0001 --device cuda --img-size 1024 --save-dir ./ --model-name rtmdet_model
 ```
 """
 
@@ -13,10 +13,10 @@ import torch
 from tqdm import tqdm
 from torch.optim import AdamW
 
-from .input.load_coco_format_segmentation import get_coco_dataloaders 
-from .rtmdet_model import RTMDETModel
-from .loss.loss_functions import calculate_loss
-from .label_postprocessor import LabelPostprocessor
+from preprocessing.load_coco_format_segmentation import get_coco_dataloaders 
+from ..rtmdet_model import RTMDetModel
+from ..loss.loss_functions import calculate_segmentation_loss
+from ..label_postprocessor import LabelPostprocessor
 
 PERFORMACE_OUTPUT_STEPS = 100 
 
@@ -30,7 +30,7 @@ def evaluate_model(model, valid_loader, epoch, device):
         for batch_idx, (images, targets) in enumerate(valid_loader):
             cls_scores, bbox_preds, mask_preds = model(images)
 
-            loss = calculate_loss(cls_scores, bbox_preds, mask_preds, masks, boxes)
+            loss = calculate_segmentation_loss(cls_scores, bbox_preds, mask_preds, masks, boxes)
             print(f"Epoch {epoch}, Batch {batch_idx}, Loss: {loss.item()}")
 
 def train_rtmdet_model(model, train_loader, valid_loader, test_loader, epochs, lr, device):
@@ -64,7 +64,7 @@ def train_rtmdet_model(model, train_loader, valid_loader, test_loader, epochs, l
                 matching_matrix, matching_matrix_background = label_postprocessor.calculate_cost_matrix(cls_scores, pred_bboxes, labels, boxes)
                 background_preds, matched_classes, matched_pred_bboxes, matched_gt_bboxes, matched_masks, resized_gt_masks = label_postprocessor.extract_matched_pairs(matching_matrix=matching_matrix, matching_matrix_background=matching_matrix_background, cls_scores=cls_scores, pred_bboxes=pred_bboxes, indices=indices, mask_kernels=mask_kernels, mask_feats=mask_feats, gt_labels=labels, gt_bboxes=boxes, gt_masks=masks, img_size=model.img_size)
 
-                loss += calculate_loss(background_preds, matched_classes, matched_pred_bboxes, matched_gt_bboxes, matched_masks, resized_gt_masks)
+                loss += calculate_segmentation_loss(background_preds, matched_classes, matched_pred_bboxes, matched_gt_bboxes, matched_masks, resized_gt_masks)
 
             loss.backward()
             optimizer.step()
@@ -93,15 +93,17 @@ if __name__ == "__main__":
     parser.add_argument("--img-size", type=int, required=False, default=1024)
     parser.add_argument("--save-dir", type=str, required=False, default="./")
     parser.add_argument("--model-name", type=str, required=False, default="rtmdet_model")
+    parser.add_argument("--seed", type=int, required=False, default=42)
 
     args = parser.parse_args()
 
+    torch.manual_seed(args.seed)
 
     logging.info(f"Loading dataset from {args.dataset_dir}")
     train_loader, valid_loader, test_loader, num_classes = get_coco_dataloaders(args.dataset_dir, args.batch_size, img_size=args.img_size) 
 
     logging.info(f"Loading model")
-    model = RTMDETModel(num_classes=num_classes, img_size=args.img_size, device=args.device)
+    model = RTMDetModel(num_classes=num_classes, img_size=args.img_size, device=args.device)
 
     logging.info(f"Begin training model")
     train_rtmdet_model(model, train_loader, valid_loader, test_loader, args.epochs, args.lr, args.device)

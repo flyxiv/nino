@@ -7,8 +7,9 @@ Losses:
 
 import torch
 from torch.nn import functional as F
+from torch.nn import CrossEntropyLoss
 
-def calculate_loss(background_preds, cls_preds, pred_bboxes, gt_bboxes, pred_masks, gt_masks):
+def calculate_segmentation_loss(background_preds, cls_preds, pred_bboxes, gt_bboxes, pred_masks, gt_masks):
     """Calculate the loss of the segmentation model.
 
     Args: M is the number of matched anchor boxes, C is the number of classes, W' and H' are the width and height of the mask
@@ -29,3 +30,8 @@ def calculate_loss(background_preds, cls_preds, pred_bboxes, gt_bboxes, pred_mas
     mask_loss = sum(F.binary_cross_entropy_with_logits(pred_mask, gt_mask) for pred_mask, gt_mask in zip(pred_masks, gt_masks))
 
     return cls_background_loss + cls_loss + bbox_loss + mask_loss
+
+
+def calculate_classification_loss(cls_preds, cls_targets):
+    cls_targets = F.one_hot(cls_targets, num_classes=cls_preds.shape[1]).float()
+    return CrossEntropyLoss()(cls_preds, cls_targets)
