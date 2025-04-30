@@ -23,7 +23,6 @@ markdown-it-py==3.0.0
 matplotlib==3.7.5
 mdurl==0.1.2
 mmcv==2.1.0
-mmengine==0.10.7
 mmdet==3.3.0
 model-index==0.1.11
 numpy==1.24.4
