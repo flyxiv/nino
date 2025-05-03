@@ -1,5 +1,10 @@
 # Instance Segmentation + GAN Model for Generating 2D Sprites Based on Character Portraits
 
+## Environment
+
+* python 3.11
+* CUDA 12.6
+
 ## Structure
 
 ![img](./img/diagram.png)
@@ -11,6 +16,9 @@
 
 ```sh
 python -m venv venv
+
+# Build docker container
+$ docker build -f ./dockerfiles/Dockerfile -t nino:v0.1 .
 
 # windows powershell
 $ . venv/Scripts/activate
@@ -27,4 +35,29 @@ $ label-studio start
 
 # split YOLO
 python -m scripts.split_yolo_exported_files --input-dir .\data\instance_segmentation_yolo --output-dir .\data\instance_segmentation_yolo
+
+# train segmentation YOLO model
+python -m segmentation_models.predict_visulize_yolo_segmentation --trained-model-path ..\yolov5\runs\segment\train8\weights\best.pt --sample-img-path .\data\instance_segmentation_yolo\valid\images\8d89728f-TWCI_2025_3_7_16_28_40.jpg
+```
+
+
+## Training
+
+### 1. CO_DETR
+
+* Setup docker 
+
+```sh
+$ docker build -t nino-detr:v0.1 .\dockerfiles\co-detr\
+
+# check container ID with 'docker images'
+$ docker run --gpus all -it -v .\data\instance_segmentation_coco:/Co-DETR/data -v .\model\segmentation\Co-DETR:/Co-DETR e8c478a237fd bash
+
+# inside docker
+$ python tools/get_checkpoint.py
+$ mv checkpoint/pytorch_model.pth checkpoint/co_detr_pretrained.pth
+$ python tools/train.py projects/configs/co_dino_vit/co_dino_5scale_vit_large_coco_instance.py
+
+# inference 
+$ python tools/test.py projects/configs/co_dino_vit/co_dino_5scale_vit_large_coco_instance.py ./checkpoints/co_detr_pretrained.pth --eval bbox --gpu-id 0 --cfg-options data.workers_per_gpu=0
 ```
