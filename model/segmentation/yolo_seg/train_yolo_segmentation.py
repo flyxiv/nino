@@ -9,13 +9,13 @@ from pathlib import Path
 from ultralytics import YOLO
 
 def train_yolo_segmentation_model(*, num_epochs, data_dir):
-    """train YOLOv11 segmentation model
+    """train YOLOv8 segmentation model
     """
-    model = YOLO('yolo11s-seg.pt') 
+    model = YOLO('yolo11x-seg.pt') 
 
     dataset_metadata_file_path = Path(data_dir) / 'data.yaml' 
 
-    model.train(data=dataset_metadata_file_path, epochs=num_epochs, imgsz=640, device=0)
+    model.train(data=dataset_metadata_file_path, epochs=num_epochs, imgsz=1024, device=0)
         
 
 if __name__ == '__main__':

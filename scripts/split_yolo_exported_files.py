@@ -72,7 +72,7 @@ def create_data_yaml_metadata_file(*, input_dir, output_dir, merge_sprite_labels
         else:
             f.write(f'names: {classes}')
 
-def split_images_labels_to_train_valid(*, train_ratio_percent, input_dir, output_dir, merge_sprite_labels): 
+def split_images_labels_to_train_valid(*, train_ratio_percent, valid_ratio_percent, input_dir, output_dir, merge_sprite_labels): 
     """Split total dataset into train/valid using train_ratio_percent value
     
     * train_ratio_percent: integer between 1 and 99. Defines train set's ratio.
@@ -87,11 +87,18 @@ def split_images_labels_to_train_valid(*, train_ratio_percent, input_dir, output
     - valid
         - images
         - labels
+    - test
+        - images
+        - labels
     """
-    assert train_ratio_percent > 0 and args.train_ratio_percent < 100, f"train_ratio_percent {args.train_ratio_percent} not between 1-99."
+    assert train_ratio_percent > 0 and train_ratio_percent < 100, f"train_ratio_percent {train_ratio_percent} not between 1-99."
     train_ratio = train_ratio_percent / 100
-    valid_ratio = (100 - train_ratio_percent) / 100
-    
+    valid_ratio = valid_ratio_percent / 100
+    train_valid_ratio = (train_ratio + valid_ratio)
+
+    # we have to train_test_split twice, so we use modified ratio for the second split to match the total split percentage.
+    modified_train_ratio = train_ratio / train_valid_ratio
+
     logging.info(f"train valid split into {train_ratio}:{valid_ratio}")
 
     total_images_dir = Path(input_dir) / 'images'
@@ -100,11 +107,13 @@ def split_images_labels_to_train_valid(*, train_ratio_percent, input_dir, output
     total_image_files = [file for file in total_images_dir.glob('**/*') if file.is_file() and (file.name.endswith('.jpg') or file.name.endswith('.png'))]
     assert len(total_image_files), f"There is no images in input dir {input_dir}"
 
-    train_valid_image_files = train_test_split(total_image_files, train_size=train_ratio)
-    train_valid_dir = [Path(input_dir) / 'train', Path(input_dir) / 'valid']
+    X_tr, X_test = train_test_split(total_image_files, train_size=train_valid_ratio)
+    X_train, X_val = train_test_split(X_tr, train_size=modified_train_ratio)
 
+    split_image_files_dir = [X_train, X_val, X_test]
+    split_base_dirs = [Path(input_dir) / 'train', Path(input_dir) / 'valid', Path(input_dir) / 'test']
 
-    for split_base_dir, split_image_files in tqdm(zip(train_valid_dir, train_valid_image_files)):
+    for split_base_dir, split_image_files in zip(split_base_dirs, split_image_files_dir):
         images_dir = split_base_dir / 'images'
         labels_dir = split_base_dir / 'labels'
 
@@ -118,7 +127,8 @@ def split_images_labels_to_train_valid(*, train_ratio_percent, input_dir, output
             shutil.copy(total_images_dir / image_file_name, images_dir / image_file_name)
             shutil.copy(total_labels_dir / label_file_name, labels_dir / label_file_name)
 
-            if merge_sprite_labels: merge_sprite_labels_to_one(labels_dir / label_file_name)
+            if merge_sprite_labels: 
+                merge_sprite_labels_to_one(labels_dir / label_file_name)
 
 def merge_sprite_labels_to_one(label_file_path):
     try:
@@ -149,14 +159,18 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--train-ratio-percent', type=int, required=False, default='80', help='percent ratio of train split. If 80, train/valid is split into 0.8/0.2. Ratio must be between 1 and 99')
+    parser.add_argument('--train-ratio-percent', type=int, required=False, default='85', help='percent ratio of train split. If 75, train is split into 0.75. Ratio must be between 1 and 99')
+    parser.add_argument('--valid-ratio-percent', type=int, required=False, default='5', help='percent ratio of valid split. If 15, valid is split into 0.15. Ratio must be between 1 and 99')
     parser.add_argument('--input-dir', type=str, required=False, default='./data/instance_segmentation_yolo', help='Project ID of the Label Studio project we want to extract image from')
     parser.add_argument('--output-dir', type=str, required=False, default='./data/instance_segmentation_yolo', help='Output directory for the splitted dataset')
-    parser.add_argument('--merge-sprite-labels', required=False, default=False, action='store_true', help='simpler version label. merges all sprite labels into "sprite"')
+    parser.add_argument('--merge-sprite-labels', required=False, action='store_true', help='simpler version label. merges all sprite labels into "sprite"')
 
     args = parser.parse_args()
 
     train_ratio_percent = args.train_ratio_percent
+    valid_ratio_percent = args.valid_ratio_percent
+
+    assert train_ratio_percent + valid_ratio_percent <= 100, "train + valid ratio percent should not exceed 100"
     input_dir = args.input_dir
     output_dir = args.output_dir
     merge_sprite_labels = args.merge_sprite_labels
@@ -165,4 +179,4 @@ if __name__ == '__main__':
     create_data_yaml_metadata_file(input_dir=input_dir, output_dir=output_dir, merge_sprite_labels=merge_sprite_labels)
 
     logging.info('splitting images to train/valid')
-    split_images_labels_to_train_valid(train_ratio_percent=train_ratio_percent, input_dir=input_dir, output_dir=output_dir, merge_sprite_labels=merge_sprite_labels)
+    split_images_labels_to_train_valid(train_ratio_percent=train_ratio_percent, valid_ratio_percent=valid_ratio_percent, input_dir=input_dir, output_dir=output_dir, merge_sprite_labels=merge_sprite_labels)

@@ -21,26 +21,38 @@ python -m preprocessing.coco_dataset_split \
 ```
 """
 
+import os
 import cv2
 import argparse
 import sklearn
 import json
+import logging
+import shutil
 
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 
-TRAIN_RATIO = 0.7
-VALID_RATIO = 0.15
-TEST_RATIO = 0.15
+TRAIN_RATIO = 0.85
+VALID_RATIO = 0.05
+TEST_RATIO = 0.10
 
+logger = logging.getLogger(__name__)
 
 def split_coco_dataset(dataset_dir: Path):
+    annotations_dir = dataset_dir / "annotations"
+    os.makedirs(annotations_dir, exist_ok=True)
+
     coco_data = json.load(open(dataset_dir / "result.json"))
 
     all_images = coco_data["images"]
     for img in all_images:
         img_name = Path(img['file_name']).name
-        img['file_name'] = f'images/{img_name}' 
+        img['file_name'] = img_name 
+
+    coco_data["categories"] = [{"id": 0, "name": "portrait"}, {"id": 1, "name": "character_sprite"}] 
+
+    for ann in coco_data["annotations"]:
+        ann["category_id"] = min(ann["category_id"], 1)
     
     image_ids = [img["id"] for img in all_images]
     
@@ -97,19 +109,37 @@ def split_coco_dataset(dataset_dir: Path):
         "categories": coco_data["categories"]
     }
     
-    with open(dataset_dir / "train.json", "w") as f:
+    with open(annotations_dir / "instances_train2017.json", "w") as f:
         json.dump(train_coco, f, indent=4)
     
-    with open(dataset_dir / "valid.json", "w") as f:
+    with open(annotations_dir / "instances_val2017.json", "w") as f:
         json.dump(valid_coco, f, indent=4)
     
-    with open(dataset_dir / "test.json", "w") as f:
+    with open(annotations_dir / "instances_test2017.json", "w") as f:
         json.dump(test_coco, f, indent=4)
+
     
-    print(f"Split complete!")
-    print(f"Train set: {len(train_images)} images, {len(train_annotations)} annotations")
-    print(f"Valid set: {len(valid_images)} images, {len(valid_annotations)} annotations")
-    print(f"Test set: {len(test_images)} images, {len(test_annotations)} annotations")
+    
+    os.makedirs(dataset_dir / "train2017", exist_ok=True)
+    os.makedirs(dataset_dir / "val2017", exist_ok=True)
+    os.makedirs(dataset_dir / "test2017", exist_ok=True)
+
+    logger.info(f"Copying images to correct split.")
+
+    for img in train_images:
+        shutil.copy(dataset_dir / 'images' / img["file_name"], dataset_dir / "train2017" / img["file_name"])
+
+    for img in valid_images:
+        shutil.copy(dataset_dir / 'images' / img["file_name"], dataset_dir / "val2017" / img["file_name"])
+
+    for img in test_images:
+        shutil.copy(dataset_dir / 'images' / img["file_name"], dataset_dir / "test2017" / img["file_name"])
+
+    
+    logger.info(f"Split complete!")
+    logger.info(f"Train set: {len(train_images)} images, {len(train_annotations)} annotations")
+    logger.info(f"Valid set: {len(valid_images)} images, {len(valid_annotations)} annotations")
+    logger.info(f"Test set: {len(test_images)} images, {len(test_annotations)} annotations")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

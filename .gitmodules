@@ -1,3 +1,9 @@
 [submodule "labelImg"]
 	path = labelImg
 	url = https://github.com/HumanSignal/labelImg.git
+[submodule "Co-DETR"]
+	path = Co-DETR
+	url = https://github.com/Sense-X/Co-DETR.git
+[submodule "model/segmentation/Co-DETR"]
+	path = model/segmentation/Co-DETR
+	url = https://github.com/Sense-X/Co-DETR.git
