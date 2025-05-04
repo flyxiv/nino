@@ -5,7 +5,7 @@ import logging
 import os
 
 from model.segmentation.yolo_seg.inference import create_segmented_model_outputs_yolo
-from model.segmentation.resnet50_mask_rcnn.inference import create_segmented_model_outputs_maskrcnn
+from model.segmentation.mask_rcnn_resnet50.inference import create_segmented_model_outputs_maskrcnn
 
     
 def collect_sprites_from_images(img_batch, output_dir: str, model, model_type: str, frame_idx = None, conf_threshold: float = 0.9):
@@ -15,8 +15,6 @@ def collect_sprites_from_images(img_batch, output_dir: str, model, model_type: s
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    results = model(img_batch)  
-
     if model_type == 'yolo':
         model_outputs = create_segmented_model_outputs_yolo(img_batch, model, conf_threshold)
     else:
