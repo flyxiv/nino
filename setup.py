@@ -13,8 +13,6 @@ _install_requires = [
     'matplotlib',
     'scipy',
     'selenium',
-    'torch+cu128',
-    'torchvision+cu128',
     'matplotlib',
     'lxml',
     'label-studio',
@@ -34,8 +32,5 @@ setup(
     version='0.0.1',
     packages=find_packages(exclude=_package_excludes),
     install_requires=_install_requires,
-    dependency_links=[
-        "https://download.pytorch.org/whl/cu128"
-    ],
-    python_requires='>=3.11'
+    python_requires='<=3.9'
 )
