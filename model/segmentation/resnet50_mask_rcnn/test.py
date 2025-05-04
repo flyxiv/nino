@@ -74,4 +74,4 @@ def main(config_file, checkpoint_file, image_path):
 
 if __name__ == '__main__':
     args = parse_args()
-    main()
+    main(args.config, args.checkpoint, args.image)
