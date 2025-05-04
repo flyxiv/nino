@@ -48,11 +48,11 @@ def collect_sprites_from_video(video: str, output_dir: str, model, model_type: s
 def is_video(input_path: str) -> bool:
     return input_path.endswith(('.mp4', '.avi', '.mov', '.mkv'))
 
-def load_model(model: str, model_type: str):
+def load_model(model: str, model_type: str, checkpoint_file: str):
     if model_type == 'yolo':
         return YOLO(model, device='cuda:0')
     elif model_type == 'maskrcnn':
-        return init_detector(model, device='cuda:0')
+        return init_detector(model, checkpoint_file, device='cuda:0')
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -65,6 +65,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--model', type=str, required=True, help='pretrained .pt file')
     parser.add_argument('--input_path', type=str, required=True, help='input image or video to get sprites from')
+    parser.add_argument('--checkpoint_file', type=str, required=False, default='', help='config file for maskrcnn')
     parser.add_argument('--output-dir', type=str, required=False, default='./', help='output directory')
     parser.add_argument('--model-type', type=str, required=False, default='yolo', help='segmentation model type, one of [yolo, maskrcnn]')
     parser.add_argument('--conf', type=int, required=False, default=90, help='confidence threshold to save sprite')
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     model_type = args.model_type
     conf = args.conf / 100
 
-    model = load_model(model, model_type)
+    model = load_model(model, model_type, args.checkpoint_file)
 
     if is_video(input_path):
         collect_sprites_from_video(input_path, output_dir, model, model_type, conf)
