@@ -37,40 +37,12 @@ def main(config_file, checkpoint_file, image_path):
         masks = result.pred_instances.masks.cpu().numpy()
     else:
         masks = None
+
+    print(bboxes)
+    print(labels)
+    print(scores)
+    print(masks)
     
-    # Visualize results
-    plt.figure(figsize=(12, 8))
-    if masks is not None:
-        # Draw masks
-        for i, mask in enumerate(masks):
-            if scores[i] > 0.5:  # Only show results with confidence > 0.5
-                # Create a colored overlay for the mask
-                color = np.random.rand(3)
-                mask_img = np.zeros_like(img)
-                for c in range(3):
-                    mask_img[:, :, c] = mask * 255 * color[c]
-                # Apply the mask over the image with transparency
-                img = cv2.addWeighted(img, 1, mask_img.astype(np.uint8), 0.5, 0)
-    
-    # Draw bounding boxes
-    for i, bbox in enumerate(bboxes):
-        if scores[i] > 0.5:  # Only show results with confidence > 0.5
-            x1, y1, x2, y2 = bbox.astype(int)
-            label_text = f"{model.dataset_meta['classes'][labels[i]]}: {scores[i]:.2f}"
-            color = (255, 0, 0)  # Red for bounding boxes
-            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-            cv2.putText(img, label_text, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-    
-    plt.imshow(img)
-    plt.axis('off')
-    plt.tight_layout()
-    plt.savefig('result.png')
-    plt.show()
-    
-    # Save result to file
-    cv2.imwrite('result_output.jpg', cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-    
-    print("Inference completed successfully!")
 
 if __name__ == '__main__':
     args = parse_args()
