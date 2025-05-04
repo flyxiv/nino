@@ -6,23 +6,19 @@ from mmengine.config import Config
 from mmdet.apis import init_detector, inference_detector
 from mmdet.visualization import visualize_det_bboxes
 
-def main():
-    # Specify the path to config and checkpoint
-    config_file = 'path/to/your/mask_rcnn_config.py'  # Replace with your config file
-    checkpoint_file = 'path/to/your/checkpoint.pth'   # Replace with your model file (e.g., nino_segment_maskrcnn_e500.pth)
-    
+def parse_args():
+    parser = argparse.ArgumentParser(description='Test the model')
+    parser.add_argument('--config', type=str, default='./model/segmentation/resnet50_mask_rcnn/resnet_config.py', help='Path to the config file')
+    parser.add_argument('--checkpoint', type=str, default='nino_segment_maskrcnn_e500.pth', help='Path to the checkpoint file')
+    parser.add_argument('--image', type=str, default='test.jpg', help='Path to the image file')
+    return parser.parse_args()
+
+def main(config_file, checkpoint_file, image_path):
     # Specify the device to use (GPU or CPU)
     device = 'cuda:0'  # Use 'cpu' if you don't have GPU
     
     # Initialize the detector
     model = init_detector(config_file, checkpoint_file, device=device)
-    
-    # Path to image(s) for inference
-    image_path = 'path/to/your/image.jpg'  # Replace with your image path
-    
-    # If you have a directory of images
-    # image_dir = 'path/to/your/images/'
-    # image_files = [os.path.join(image_dir, f) for f in os.listdir(image_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
     
     # Run inference on a single image
     result = inference_detector(model, image_path)
@@ -77,4 +73,5 @@ def main():
     print("Inference completed successfully!")
 
 if __name__ == '__main__':
+    args = parse_args()
     main()
