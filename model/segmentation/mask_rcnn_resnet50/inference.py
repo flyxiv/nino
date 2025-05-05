@@ -29,13 +29,15 @@ def create_segmented_model_outputs_maskrcnn(img_batch, model, conf_threshold: fl
             img = img_batch[result_idx]
 
             for bbox, label, score, mask in zip(result.pred_instances.bboxes, result.pred_instances.labels, result.pred_instances.scores, result.pred_instances.masks):
-                model_output = create_from_maskrcnn_output(mask, bbox, label, score)
-                model_outputs.append((model_output, img))
+                if score > conf_threshold:
+                    model_output = create_from_maskrcnn_output(mask, bbox, label, score)
+                    model_outputs.append((model_output, img))
 
     else:
         img = img_batch
         for bbox, label, score, mask in zip(batch_results.pred_instances.bboxes, batch_results.pred_instances.labels, batch_results.pred_instances.scores, batch_results.pred_instances.masks):
-            model_output = create_from_maskrcnn_output(mask, bbox, label, score)
-            model_outputs.append((model_output, img_batch))
+            if score > conf_threshold:
+                model_output = create_from_maskrcnn_output(mask, bbox, label, score)
+                model_outputs.append((model_output, img_batch))
 
     return model_outputs

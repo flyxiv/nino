@@ -57,7 +57,7 @@ def collect_sprites_from_video(video: str, output_dir: str, model, model_type: s
     frames = parse_video_to_frames(video)
 
     batch_cnt = (len(frames) // BATCH_SIZE) + 1
-    for batch_idx in range(batch_cnt):
+    for batch_idx in tqdm(range(batch_cnt), desc='Collecting sprites from video'):
         batch_start_idx = batch_idx * BATCH_SIZE
         batch_end_idx = min(batch_start_idx + BATCH_SIZE, len(frames))
         batch_frames = frames[batch_start_idx:batch_end_idx]
