@@ -16,7 +16,6 @@ import logging
 from tqdm import tqdm
 from typing import List
 from util.get_segmented_sprite import collect_sprites_from_images
-from ultralytics import YOLO
 from util.sprite_classifications import SPRITE_TABLE, SPRITE_IDS 
 from model.sprite_classification.consts import PREPROCESS_TRANSFORMS
 from pathlib import Path
@@ -77,6 +76,7 @@ def is_image(input_path: Path | str) -> bool:
 
 def load_model(model: str, model_type: str, config_file: str):
     if model_type == 'yolo':
+        from ultralytics import YOLO
         return YOLO(model)
     elif model_type == 'maskrcnn':
         from mmdet.apis import init_detector 
