@@ -101,10 +101,10 @@ class SpriteClassificationDataset(Dataset):
 
         for data in self.data:
             image_path, label = data.image_path, data.label
-
             image = Image.open(image_path)
 
             image.save(os.path.join(output_dir, f'{label}.png'))
+
 
 if __name__ == '__main__':
     args = parse_args()

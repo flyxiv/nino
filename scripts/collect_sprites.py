@@ -17,9 +17,29 @@ from tqdm import tqdm
 from typing import List
 from util.get_segmented_sprite import collect_sprites_from_images
 from ultralytics import YOLO
-from mmdet.apis import init_detector, inference_detector
+from util.sprite_classifications import SPRITE_TABLE, SPRITE_IDS 
+from model.sprite_classification.consts import PREPROCESS_TRANSFORMS
+from pathlib import Path
+import torch
+import torch.nn as nn
+import torchvision.models 
+import shutil
 
 BATCH_SIZE = 8 
+
+def parse_args(): 
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--model', type=str, required=True, help='pretrained .pt file')
+    parser.add_argument('--input-path', type=str, required=True, help='input image or video to get sprites from')
+    parser.add_argument('--config-file', type=str, required=False, default='', help='config file for maskrcnn')
+    parser.add_argument('--output-dir', type=str, required=False, default='./', help='output directory')
+    parser.add_argument('--model-type', type=str, required=False, default='yolo', help='segmentation model type, one of [yolo, maskrcnn]')
+    parser.add_argument('--conf', type=int, required=False, default=90, help='confidence threshold to save sprite')
+    parser.add_argument('--classification-model', type=str, required=False, default='./trained_models/nino_classification_efficientnet_v2_l.pth', help='path for classification model')
+
+    return parser.parse_args()
+
 
 def parse_video_to_frames(video: str) -> List[np.ndarray]:
     cap = cv2.VideoCapture(video)
@@ -45,14 +65,23 @@ def collect_sprites_from_video(video: str, output_dir: str, model, model_type: s
 
         collect_sprites_from_images(batch_frames, output_dir, model, model_type, batch_idx, conf)
 
-def is_video(input_path: str) -> bool:
-    return input_path.endswith(('.mp4', '.avi', '.mov', '.mkv'))
+def is_video(input_path: Path | str) -> bool:
+    if type(input_path) == str:
+        return input_path.endswith(('.mp4', '.avi', '.mov', '.mkv'))
+    return input_path.name.endswith(('.mp4', '.avi', '.mov', '.mkv'))
+
+def is_image(input_path: Path | str) -> bool:
+    if type(input_path) == str:
+        return input_path.endswith(('.png', '.jpg', '.jpeg'))
+    return input_path.name.endswith(('.png', '.jpg', '.jpeg'))
 
 def load_model(model: str, model_type: str, config_file: str):
     if model_type == 'yolo':
-        return YOLO(model, device='cuda:0')
+        return YOLO(model)
     elif model_type == 'maskrcnn':
+        from mmdet.apis import init_detector 
         return init_detector(config_file, model, device='cuda:0')
+
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -61,29 +90,58 @@ if __name__ == "__main__":
         datefmt='%m/%d/%Y %I:%M:%S %p',
     )
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--model', type=str, required=True, help='pretrained .pt file')
-    parser.add_argument('--input-path', type=str, required=True, help='input image or video to get sprites from')
-    parser.add_argument('--config-file', type=str, required=False, default='', help='config file for maskrcnn')
-    parser.add_argument('--output-dir', type=str, required=False, default='./', help='output directory')
-    parser.add_argument('--model-type', type=str, required=False, default='yolo', help='segmentation model type, one of [yolo, maskrcnn]')
-    parser.add_argument('--conf', type=int, required=False, default=90, help='confidence threshold to save sprite')
-
-    args = parser.parse_args()
+    args = parse_args()
     model = args.model
     input_path = args.input_path
     output_dir = args.output_dir
     model_type = args.model_type
     conf = args.conf / 100
+    classification_model_path = args.classification_model
 
     model = load_model(model, model_type, args.config_file)
+    classification_model = torchvision.models.efficientnet_v2_l(weights=None)
+    classification_model.classifier[-1] = nn.Linear(in_features=classification_model.classifier[-1].in_features, out_features=len(SPRITE_IDS))
+    classification_model.load_state_dict(torch.load(classification_model_path))
+    classification_model.eval()
+
+    logging.info(f'Collecting sprites from {input_path}')
+
+    output_dir = Path(output_dir)
+    input_path = Path(input_path)
 
     if is_video(input_path):
         collect_sprites_from_video(input_path, output_dir, model, model_type, conf)
+    elif os.path.isdir(input_path):
+        for img in os.listdir(input_path):
+            if is_image(img):
+                original_image = cv2.imread(input_path / img)
+                original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+                collect_sprites_from_images(original_image, output_dir, model, model_type, conf)
+
+            if is_video(img):
+                collect_sprites_from_video(input_path / img, output_dir, model, model_type, conf)
     else:
         original_image = cv2.imread(input_path)
         original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 
         collect_sprites_from_images(original_image, output_dir, model, model_type, conf)
-    
+
+    logging.info(f'Classifying sprites from {output_dir}')
+
+    for sprite_name in SPRITE_TABLE.values():
+        sprite_dir = output_dir / sprite_name
+
+        if not os.path.exists(sprite_dir):
+            os.makedirs(sprite_dir)
+
+    for img_path in os.listdir(output_dir):
+        if is_image(img_path):
+            img = Image.open(output_dir / img_path)
+            img = PREPROCESS_TRANSFORMS(img).unsqueeze(0)
+            img_classes = classification_model(img)
+
+            highest_prob_idx = torch.argmax(img_classes, dim=1).to('cpu').item()
+            sprite_name = SPRITE_TABLE[highest_prob_idx]
+            sprite_dir = output_dir / sprite_name
+
+            shutil.move(output_dir / img_path, sprite_dir / img_path)

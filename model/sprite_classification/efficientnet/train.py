@@ -10,19 +10,15 @@ from model.sprite_classification.dataset import SpriteClassificationDataset
 from util.sprite_classifications import SPRITE_IDS
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 from tqdm import tqdm
-from model.sprite_classification.efficientnet.experiment import SPRITE_IMG_SIZE
+from model.sprite_classification.consts import PREPROCESS_TRANSFORMS, SPRITE_IMG_SIZE
 from torchmetrics import Precision, Recall
 from util.sprite_classifications import SPRITE_TABLE
 
 data_dir = './output_data/classification'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Resize(SPRITE_IMG_SIZE),
-])
 
-[train_dataset, val_dataset, test_dataset] = SpriteClassificationDataset.create_from_dir(data_dir, transform)
+[train_dataset, val_dataset, test_dataset] = SpriteClassificationDataset.create_from_dir(data_dir, PREPROCESS_TRANSFORMS)
 
 batch_size = 16 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

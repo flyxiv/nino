@@ -11,8 +11,7 @@ from util.sprite_classifications import SPRITE_IDS
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 from tqdm import tqdm
 from plotly.io import show
-
-SPRITE_IMG_SIZE = (80, 40)
+from model.sprite_classification.consts import PREPROCESS_TRANSFORMS, SPRITE_IMG_SIZE
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -21,10 +20,7 @@ def parse_args():
     return parser.parse_args()
 
 def objective(trial):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize(SPRITE_IMG_SIZE),
-    ])
+    transform = PREPROCESS_TRANSFORMS
 
     [train_dataset, val_dataset, test_dataset] = SpriteClassificationDataset.create_from_dir(args.data_dir, transform)
 
