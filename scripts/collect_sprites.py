@@ -62,6 +62,9 @@ def collect_sprites_from_video(video: str, output_dir: str, model, model_type: s
         batch_end_idx = min(batch_start_idx + BATCH_SIZE, len(frames))
         batch_frames = frames[batch_start_idx:batch_end_idx]
 
+        if len(batch_frames) == 0:
+            break
+
         collect_sprites_from_images(batch_frames, output_dir, model, model_type, batch_idx, conf)
 
 def is_video(input_path: Path | str) -> bool:
@@ -134,7 +137,7 @@ if __name__ == "__main__":
         if not os.path.exists(sprite_dir):
             os.makedirs(sprite_dir)
 
-    for img_path in os.listdir(output_dir):
+    for img_path in tqdm(os.listdir(output_dir), desc='Classifying sprites'):
         if is_image(img_path):
             img = Image.open(output_dir / img_path)
             img = PREPROCESS_TRANSFORMS(img).unsqueeze(0)
