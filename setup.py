@@ -21,11 +21,8 @@ _install_requires = [
     'datasets',
     'ultralytics',
     'google-cloud-storage',
-    'mmdet',
-    'mmcv',
     'optuna',
     'plotly',
-    'torchmetrics'
 ]
 
 _package_excludes = [
