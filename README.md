@@ -15,17 +15,20 @@
    * setup environment:
 
 ```sh
+# load models
+$ git lfs pull
+
+# Set python environment
 $ python -m venv venv
 
-# windows
+## windows
 $ . venv/Scripts/activate
-
-# linux/macos
+## linux/macos
 $ . venv/bin/activate
 
-$ python -m install -e .
 
-# test run 
+$ python -m install -e .
+## test run 
 python scripts/collect_sprites.py --model ./trained_models/nino_seg_yolo_300e.pt --input-path ./demo/test_img.png --output-dir ./demo_out --model-type yolo --conf 30
 ```
 
