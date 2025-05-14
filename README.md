@@ -24,6 +24,9 @@ $ . venv/Scripts/activate
 $ . venv/bin/activate
 
 $ python -m install -e .
+
+# test run 
+python scripts/collect_sprites.py --model ./trained_models/nino_seg_yolo_300e.pt --input-path ./demo/test_img.png --output-dir ./demo_out --model-type yolo --conf 30
 ```
 
 ## Setting up Environment for Mask R-CNN in Docker
