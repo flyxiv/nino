@@ -21,6 +21,11 @@ _install_requires = [
     'datasets',
     'ultralytics',
     'google-cloud-storage',
+    'mmdet',
+    'mmcv',
+    'optuna',
+    'plotly',
+    'torchmetrics'
 ]
 
 _package_excludes = [
@@ -32,5 +37,5 @@ setup(
     version='0.0.1',
     packages=find_packages(exclude=_package_excludes),
     install_requires=_install_requires,
-    python_requires='<=3.9'
+    python_requires='<=3.11'
 )
