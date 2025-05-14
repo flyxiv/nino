@@ -2,7 +2,7 @@ import argparse
 import torch
 from dataclasses import dataclass
 from torch.utils.data import Dataset
-from util.sprite_classifications import SPRITE_IDS, SPRITE_TABLE
+from util.sprite_metadata import SPRITE_NO_DIRECTIONS, SPRITE_NO_DIRECTION_IDS, SPRITE_IDS, sprite_name_to_no_direction_name
 from PIL import Image
 from pathlib import Path
 from torchvision import transforms
@@ -12,8 +12,8 @@ from sklearn.model_selection import train_test_split
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='./output_data/sprites')
-    parser.add_argument('--split-output-dir', type=str, default='./output_data/classification')
+    parser.add_argument('--data_dir', type=str, default='./output_data/labels/sprites')
+    parser.add_argument('--split-output-dir', type=str, default='./output_data/labels/classification')
     return parser.parse_args()
 
 @dataclass
@@ -28,7 +28,7 @@ class SpriteClassificationDataTable():
 
         for sprite_name in SPRITE_IDS.keys():
             for file in os.listdir(os.path.join(data_dir, sprite_name)):
-                label = SPRITE_IDS[sprite_name]
+                label = SPRITE_NO_DIRECTION_IDS[sprite_name_to_no_direction_name(sprite_name)]
                 if file.endswith('.png') or file.endswith('.jpg'):
                     self.classification_data.append(SpriteClassificationData(os.path.join(data_dir, sprite_name, file), label))
     
@@ -44,7 +44,7 @@ class SpriteClassificationDataTable():
         splits = [('train', self.train_dataset), ('val', self.val_dataset), ('test', self.test_dataset)]
 
         for split, dataset in splits:
-            for sprite_name in SPRITE_IDS.keys():
+            for sprite_name in SPRITE_NO_DIRECTION_IDS.keys():
                 output_dir = os.path.join(output_base_dir, split, sprite_name)
 
                 if not os.path.exists(output_dir):
@@ -53,7 +53,7 @@ class SpriteClassificationDataTable():
             for data in dataset.data:
                 image_path, label = data.image_path, data.label
                 image_name = Path(image_path).name
-                sprite_name = SPRITE_TABLE[label]
+                sprite_name = SPRITE_NO_DIRECTIONS[label]
 
                 image = Image.open(image_path)
                 image.save(os.path.join(output_base_dir, split, sprite_name, image_name))
@@ -73,9 +73,9 @@ class SpriteClassificationDataset(Dataset):
         dataset = list()
 
         for split in split:
-            for sprite_name in SPRITE_IDS.keys():
+            for sprite_name in SPRITE_NO_DIRECTION_IDS.keys():
                 for file in os.listdir(os.path.join(data_base_dir, split, sprite_name)):
-                    label = SPRITE_IDS[sprite_name]
+                    label = SPRITE_NO_DIRECTION_IDS[sprite_name]
 
                     if file.endswith('.png') or file.endswith('.jpg'):
                             data.append(SpriteClassificationData(os.path.join(data_base_dir, split, sprite_name, file), label))

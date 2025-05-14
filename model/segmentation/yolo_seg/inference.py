@@ -14,7 +14,7 @@ def create_from_yolo_output(mask, bbox):
         bbox_class=bbox[5]
     )
 
-def create_segmented_model_outputs_yolo(img_batch, model, conf_threshold: float = 0.9):
+def create_segmented_model_outputs_yolo(img_batch, model, conf: float = 0.9):
     """Collect model outputs and their corresponding images from a single image or a batch of images.
     """
     results = model(img_batch, device=0)  
@@ -27,7 +27,7 @@ def create_segmented_model_outputs_yolo(img_batch, model, conf_threshold: float 
             
             for mask, box in zip(masks, boxes):
                 model_output = create_from_yolo_output(mask, box)
-                if model_output.bbox_conf > conf_threshold:
+                if model_output.bbox_conf > conf:
                     if type(img_batch) == list:
                         img = img_batch[result_idx]
                     else:

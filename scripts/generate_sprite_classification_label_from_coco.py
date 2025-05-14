@@ -27,7 +27,7 @@ import pycocotools.mask as mask_utils
 from tqdm import tqdm
 from pycocotools.coco import COCO
 
-from util.sprite_classifications import SPRITE_TABLE, SPRITE_IDS
+from util.sprite_metadata import SPRITE_TABLE, SPRITE_IDS
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate sprite classification labels from COCO dataset')

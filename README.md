@@ -1,16 +1,17 @@
 # Instance Segmentation + GAN Model for Generating 2D Sprites Based on Character Portraits
 
-## Environment
-
-* python 3.11
-* CUDA 12.6
-
 ## Structure
 
 ![img](./img/diagram.png)
 
 1. We make an instance segmentation model that will collect character portraits and 2D sprites to speed up data collection process.
 2. img2img model to generate 2D sprites from character portraits. Start with `idle-downward` generation, and then expand to creating whole set of sprites.
+
+## Environment
+**Mask-RCNN needs old versions of python/pytorch/CUDA because of mmdetection(python 3.7, CUDA 11.6, ...)**
+   * best to create Docker container in `./dockerfiles`
+
+YOLO based and segmentation/duplicate detection model(efficientnet) need python 3.9 above.
 
 ## Start
 
@@ -60,4 +61,9 @@ $ python tools/train.py projects/configs/co_dino_vit/co_dino_5scale_vit_large_co
 
 # inference 
 $ python tools/test.py projects/configs/co_dino_vit/co_dino_5scale_vit_large_coco_instance.py ./checkpoints/co_detr_pretrained.pth --eval bbox --gpu-id 0 --cfg-options data.workers_per_gpu=0
+```
+
+
+```sh
+docker run --gpus all -it -v .\data\instance_segmentation_coco:/nino/data -v .\nino_seg_maskrcnn_e500.pth:/nino/nino_seg_maskrcnn_e500.pth 2acb9278575c bash    
 ```

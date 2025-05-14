@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision import transforms
 from model.sprite_classification.dataset import SpriteClassificationDataTable
-from util.sprite_classifications import SPRITE_IDS
+from util.sprite_metadata import SPRITE_IDS
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 from tqdm import tqdm
 from plotly.io import show

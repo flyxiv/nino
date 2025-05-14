@@ -7,7 +7,7 @@ import os
 from model.segmentation.yolo_seg.inference import create_segmented_model_outputs_yolo
 
     
-def collect_sprites_from_images(img_batch, output_dir: str, model, model_type: str, frame_idx = None, conf_threshold: float = 0.9):
+def collect_sprites_from_images(img_batch, output_dir: str, model, model_type: str, frame_idx = None, conf: float = 0.9):
     """Collect sprites from a single image or a batch of images.
     """
 
@@ -15,10 +15,10 @@ def collect_sprites_from_images(img_batch, output_dir: str, model, model_type: s
         os.makedirs(output_dir)
     
     if model_type == 'yolo':
-        model_outputs = create_segmented_model_outputs_yolo(img_batch, model, conf_threshold)
+        model_outputs = create_segmented_model_outputs_yolo(img_batch, model, conf)
     else:
         from model.segmentation.mask_rcnn_resnet50.inference import create_segmented_model_outputs_maskrcnn
-        model_outputs = create_segmented_model_outputs_maskrcnn(img_batch, model, conf_threshold)
+        model_outputs = create_segmented_model_outputs_maskrcnn(img_batch, model, conf)
 
     for sprite_cnt, (model_output, img) in enumerate(model_outputs):
         segmented_sprite = get_segmented_sprite(img, model_output)

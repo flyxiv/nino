@@ -1,9 +1,6 @@
-SPRITE_DIRECTIONS = ['up', 'upright', 'right', 'downright', 'down', 'downleft', 'left', 'upleft']
-SPRITE_DIRECTION_MOTIONS = ['idle', 'walk', 'run', 'attack', 'laydown', 'swim', 'jump']
-SPRITE_NO_DIRECTION_MOTIONS = ['climb']
-
 import os
 import argparse
+from util.sprite_metadata import SPRITE_DIRECTIONS, SPRITE_DIRECTION_MOTIONS, SPRITE_NO_DIRECTION_MOTIONS
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
