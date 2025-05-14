@@ -8,37 +8,28 @@
 2. img2img model to generate 2D sprites from character portraits. Start with `idle-downward` generation, and then expand to creating whole set of sprites.
 
 ## Environment
-**Mask-RCNN needs old versions of python/pytorch/CUDA because of mmdetection(python 3.7, CUDA 11.6, ...)**
+1) **Mask-RCNN needs old versions of python/pytorch/CUDA because of mmdetection(python 3.7, CUDA 11.6, ...)**
    * best to create Docker container in `./dockerfiles`
 
-YOLO based and segmentation/duplicate detection model(efficientnet) need python 3.9 above.
-
-## Start
+2) YOLO based and segmentation/duplicate detection model(efficientnet) need python 3.9 above.
+   * setup environment:
 
 ```sh
-python -m venv venv
+$ python -m venv venv
 
-# Build docker container
-$ docker build -f ./dockerfiles/Dockerfile -t nino:v0.1 .
-
-# windows powershell
+# windows
 $ . venv/Scripts/activate
 
-# macOS/Linux
+# linux/macos
 $ . venv/bin/activate
 
+$ python -m install -e .
+```
 
-# setup environment
-$ pip install -e .
+## Setting up Environment for Mask R-CNN in Docker
 
-# start label studio
-$ label-studio start
-
-# split YOLO
-python -m scripts.split_yolo_exported_files --input-dir .\data\instance_segmentation_yolo --output-dir .\data\instance_segmentation_yolo
-
-# train segmentation YOLO model
-python -m segmentation_models.predict_visulize_yolo_segmentation --trained-model-path ..\yolov5\runs\segment\train8\weights\best.pt --sample-img-path .\data\instance_segmentation_yolo\valid\images\8d89728f-TWCI_2025_3_7_16_28_40.jpg
+```sh
+$ docker build -f ./dockerfiles/Dockerfile -t nino:v0.1 .
 ```
 
 
