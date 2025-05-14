@@ -1,5 +1,5 @@
 import os
-
+import torch
 from util.segmented_model_output import SegmentedModelOutput
 
 
@@ -17,7 +17,9 @@ def create_from_yolo_output(mask, bbox):
 def create_segmented_model_outputs_yolo(img_batch, model, conf: float = 0.9):
     """Collect model outputs and their corresponding images from a single image or a batch of images.
     """
-    results = model(img_batch, device=0)  
+
+    device = 0 if torch.cuda.is_available() else 'cpu'
+    results = model(img_batch, device=device)  
     model_outputs = []
 
     for (result_idx, result) in enumerate(results):
