@@ -131,7 +131,7 @@ if __name__ == "__main__":
     conf = args.conf / 100
     classification_model_path = args.classification_model
 
-    device = 0 if torch.cuda.is_available() else 'cpu'
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     model = load_model(model, model_type, args.config_file)
     classification_model = torchvision.models.efficientnet_v2_l(weights=None)
@@ -140,6 +140,7 @@ if __name__ == "__main__":
         out_features=len(SPRITE_NO_DIRECTION_IDS),
     )
     classification_model.load_state_dict(torch.load(classification_model_path, map_location=device))
+    classification_model = classification_model.to(device)
     classification_model.eval()
 
     logging.info(f"Collecting sprites from {input_path}")
