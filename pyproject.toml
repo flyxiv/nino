@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nino"
+version = "0.0.1"
+description = "Nino is a multi-modal AI model for game pixel sprite collection."
+requires-python = ">=3.9"
+dependencies = [
+    "pyyaml",
+    "pyqt5",
+    "tqdm",
+    "jupyter",
+    "scikit-learn",
+    "diffusers",
+    "transformers",
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "scipy",
+    "selenium",
+    "matplotlib",
+    "label-studio",
+    "pycocotools",
+    "datasets",
+    "ultralytics",
+    "google-cloud-storage",
+    "optuna",
+    "plotly",
+    "torchmetrics"
+]
+
+[tool.setuptools]
+packages = ["nino"]
+exclude = ["*.tests"] 
