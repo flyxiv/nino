@@ -182,7 +182,7 @@ def classify_sprites(output_dir: Path, classification_model_path: str, device: s
 
             shutil.move(output_dir / img_path, sprite_dir / img_path)
 
-def remove_duplicate_sprites(output_dir: Path, duplicate_detection_model_path: str):
+def remove_duplicate_sprites(output_dir: Path, duplicate_detection_model_path: str, device: str):
     model = DuplicateDetectionModel()
     model.load_state_dict(torch.load(duplicate_detection_model_path))
     model = model.to(device)
@@ -245,4 +245,4 @@ if __name__ == "__main__":
     classify_sprites(output_dir, classification_model_path, device)
 
     logging.info(f"Removing duplicate sprites")
-    remove_duplicate_sprites(output_dir)
+    remove_duplicate_sprites(output_dir, duplicate_detection_model_path, device)
