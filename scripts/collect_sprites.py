@@ -18,6 +18,7 @@ import torch
 import torch.nn as nn
 import torchvision.models
 import numpy as np
+from datetime import datetime
 from PIL import Image
 from tqdm import tqdm
 from typing import List
@@ -194,15 +195,16 @@ def remove_duplicate_sprites(output_dir: Path, duplicate_detection_model_path: s
         sprite_images = list(sprite_dir.glob("*.png"))
         valid_sprites = {img.name: True for img in sprite_images}
 
-        for i in range(len(sprite_images)):
-            if not valid_sprites[img1.name]:
+        for i in tqdm(range(len(sprite_images))):
+            img1_name = sprite_images[i].name
+            if not valid_sprites[img1_name]:
                 continue
 
-            img1 = Image.open(sprite_dir / sprite_images[i])
+            img1 = Image.open(sprite_dir / img1_name)
             img1_tensor = PREPROCESS_TRANSFORMS(img1).unsqueeze(0).to(device)
 
             for j in range(i + 1, len(sprite_images)):
-                img2_name = sprite_images[j]
+                img2_name = sprite_images[j].name
                 if not valid_sprites[img2_name]:
                     continue
 
@@ -211,12 +213,23 @@ def remove_duplicate_sprites(output_dir: Path, duplicate_detection_model_path: s
 
                 img1_clarity, img2_clarity, similarity = model(img1_tensor, img2_tensor)
 
+                if max(img1_clarity, img2_clarity) < 0.8:
+                    valid_sprites[img1_name] = False
+                    valid_sprites[img2_name] = False
+                    break
+
                 if similarity > 0.9:
                     if img1_clarity > img2_clarity:
                         valid_sprites[img2_name] = False
                     else:
                         valid_sprites[img1_name] = False
                         break
+
+        for img in sprite_images:
+            if not valid_sprites[img.name]:
+                logging.info(f"removing duplicate sprite {img}") 
+                os.remove(img)
+
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -225,15 +238,19 @@ if __name__ == "__main__":
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
 
+    task_id = datetime.now().strftime("%Y%m%d%H%M%S%f")
+
     args = parse_args()
     input_path = args.input_path
-    output_dir = args.output_dir
+    output_dir = f"{args.output_dir}/{task_id}"
     segmentation_model_type = args.segmentation_model_type
     conf = args.conf / 100
     classification_model_path = args.classification_model
     duplicate_detection_model_path = args.duplicate_detection_model
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+    os.makedirs(output_dir, exist_ok=True)
 
     input_path = Path(input_path)
     output_dir = Path(output_dir)
